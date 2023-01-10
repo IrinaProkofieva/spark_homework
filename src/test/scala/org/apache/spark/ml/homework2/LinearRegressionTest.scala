@@ -1,7 +1,6 @@
 package org.apache.spark.ml.homework2
 
 import breeze.linalg.DenseVector
-import org.apache.spark.ml.homework2.LinearRegressionTest.{_test_data, _train_data}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.DataFrame
 import org.scalatest.flatspec.AnyFlatSpec
@@ -13,6 +12,8 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
   val delta = 0.0000001
   lazy val test_data: DataFrame = LinearRegressionTest._test_data
   lazy val train_data: DataFrame = LinearRegressionTest._train_data
+  lazy val test_data_2: DataFrame = LinearRegressionTest._test_data_2
+  lazy val train_data_2: DataFrame = LinearRegressionTest._train_data_2
 
 
   "Model" should "predict" in {
@@ -53,11 +54,22 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
     preds should be(Array(0, 0, 1))
   }
 
+
+  "Estimator" should "produce good model 2" in {
+    val estimator = new LinearRegression()
+      .setInputCol("features")
+      .setOutputCol("label")
+      .setLR(0.001)
+      .setMaxIter(100)
+
+    val model = estimator.fit(train_data_2)
+    val preds: Array[Int] = model.transform(test_data_2).collect().map(_.getAs[Int](1))
+    preds should be(Array(1, 1, 0, 0))
+  }
+
 }
 
 object LinearRegressionTest extends WithSpark {
-
-//  lazy val _test_data = spark.read.csv("src/test/scala/org/apache/spark/ml/homework2/test_data.csv")
 
   lazy val _test_vectors = Seq(
     Vectors.dense(9, 7.5, 4, -20),
@@ -79,5 +91,40 @@ object LinearRegressionTest extends WithSpark {
   lazy val _train_data: DataFrame = {
     import sqlc.implicits._
     _train_vectors.toDF("features", "label")
+  }
+
+  lazy val _test_vectors_2 = Seq(
+    Vectors.dense(0,1),
+    Vectors.dense(0, 0),
+    Vectors.dense(-6, 0),
+    Vectors.dense(-2, 2)
+  )
+
+  lazy val _test_data_2: DataFrame = {
+    import sqlc.implicits._
+    _test_vectors_2.map(x => Tuple1(x)).toDF("features")
+  }
+
+  lazy val _train_vectors_2 = Seq(
+    (Vectors.dense(0, -1), 0),
+    (Vectors.dense(-2,0), 1),
+    (Vectors.dense(-1, 0), 0),
+    (Vectors.dense(-1, 4), 1),
+    (Vectors.dense(1, -4), 0),
+    (Vectors.dense(-2, -1), 1),
+    (Vectors.dense(0, 3), 0),
+    (Vectors.dense(-4, -2), 1),
+    (Vectors.dense(-20, -30), 1),
+    (Vectors.dense(10, 5), 0),
+    (Vectors.dense(4, 2), 0),
+    (Vectors.dense(-4, -1.5), 1),
+    (Vectors.dense(2, 2), 0),
+    (Vectors.dense(-1.5, 0), 1),
+    (Vectors.dense(-1.5, -1), 0)
+  )
+
+  lazy val _train_data_2: DataFrame = {
+    import sqlc.implicits._
+    _train_vectors_2.toDF("features", "label")
   }
 }
