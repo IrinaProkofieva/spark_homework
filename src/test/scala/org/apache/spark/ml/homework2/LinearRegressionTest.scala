@@ -1,6 +1,6 @@
 package org.apache.spark.ml.homework2
 
-import breeze.linalg.DenseVector
+import breeze.linalg.{DenseMatrix, DenseVector}
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.DataFrame
 import org.scalatest.flatspec.AnyFlatSpec
@@ -31,18 +31,20 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
     val estimator = new LinearRegression()
       .setInputCol("features")
       .setOutputCol("label")
+      .setLR(0.001)
+      .setMaxIter(1)
 
     val model = estimator.fit(train_data)
 
-    //data from python analog
-    model.bias should be(-0.0014892 +- delta)
-    model.weights(0) should be(-0.0141814 +- delta)
-    model.weights(1) should be(0.0231037 +- delta)
-    model.weights(2) should be(0.0091981 +- delta)
-    model.weights(3) should be(0.0133102 +- delta)
+    //compare with data from python analog
+    model.bias should be(-0.0001666666 +- delta)
+    model.weights(0) should be(-0.00041667 +- delta)
+    model.weights(1) should be(-0.00075 +- delta)
+    model.weights(2) should be(-0.00058333 +- delta)
+    model.weights(3) should be(0.00675 +- delta)
   }
 
-  "Estimator" should "produce good model" in {
+  "Estimator" should "produce good predicts on train data" in {
     val estimator = new LinearRegression()
       .setInputCol("features")
       .setOutputCol("label")
@@ -55,16 +57,16 @@ class LinearRegressionTest extends AnyFlatSpec with should.Matchers with WithSpa
   }
 
 
-  "Estimator" should "produce good model 2" in {
+  "Estimator" should "produce good predicts on test data" in {
     val estimator = new LinearRegression()
       .setInputCol("features")
       .setOutputCol("label")
       .setLR(0.001)
-      .setMaxIter(100)
+      .setMaxIter(1)
 
     val model = estimator.fit(train_data_2)
     val preds: Array[Int] = model.transform(test_data_2).collect().map(_.getAs[Int](1))
-    preds should be(Array(1, 1, 0, 0))
+    preds should be(Array(0, 0, 1, 1))
   }
 
 }
@@ -93,6 +95,7 @@ object LinearRegressionTest extends WithSpark {
     _train_vectors.toDF("features", "label")
   }
 
+//  data with _2 are split with y=3x+4
   lazy val _test_vectors_2 = Seq(
     Vectors.dense(0,1),
     Vectors.dense(0, 0),

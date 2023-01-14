@@ -96,8 +96,8 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
       .map(r => r.toSeq.toArray).toArray.flatten.flatMap(_.asInstanceOf[org.apache.spark.ml.linalg.DenseVector].values)
 
     val newCols = newFeatureArray.length / rows
-    val denseMat:DenseMatrix[Double] = new DenseMatrix[Double](rows, newCols, newFeatureArray)
-    denseMat
+    val denseMat:DenseMatrix[Double] = new DenseMatrix[Double](newCols, rows, newFeatureArray)
+    denseMat.t
   }
 
   def update_weights(): Unit = {
@@ -111,7 +111,7 @@ class LinearRegression(override val uid: String) extends Estimator[LinearRegress
 //    val loss: Double = -mean(zeroLoss + oneLoss)
     val gradB: Double = mean(difference)
     var gradW: DenseVector[Double] = X.t * difference
-    gradW = gradW.map(v => v / gradW.size)
+    gradW = gradW.map(v => v / y.length)
     W = W - getLR * gradW
     b = b - getLR * gradB
   }
@@ -144,7 +144,7 @@ class LinearRegressionModel private[homework2](
       dataset.sqlContext.udf.register(uid+"_predict",
         (x : org.apache.spark.ml.linalg.Vector) => {
           val denseX: DenseVector[Double] = new DenseVector[Double](x.toArray)
-          val preds: Double = 1 / (1 + exp(-denseX.dot(weights) + bias))
+          val preds: Double = 1 / (1 + exp(-(denseX.dot(weights) + bias)))
           if (preds > getThreshold) {
             1
           }
