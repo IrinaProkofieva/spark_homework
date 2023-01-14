@@ -1,6 +1,6 @@
 package org.apache.spark.ml.homework2
 
-import breeze.linalg.{DenseMatrix, DenseVector}
+import breeze.linalg.DenseVector
 import org.apache.spark.ml.linalg.Vectors
 import org.apache.spark.sql.DataFrame
 import org.scalatest.flatspec.AnyFlatSpec
